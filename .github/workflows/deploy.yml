@@ -1,0 +1,32 @@
+name: CI
+on:
+    push:
+        branches: 
+            - dev
+jobs:
+    build:
+        name: Website rendering 
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - name: Setup nodeJS enviroment
+          uses: actions/setup-node@v1
+          with:
+            node-version: '12.x'
+        - name: Install hexo dependencies
+          run: |
+            npm install hexo-cli -g
+            npm install
+            npm install --save hexo-helper-live2d
+        - name: Generate site sources
+          run: |
+            hexo clean
+            hexo generate
+        - name: Deploy static site
+          run: |
+            cd ./public && git init && git add .
+            git config --global user.name suishika
+            git config --global user.email suishika@disroot.org
+            git add -A
+            git commit -m "Static site updated at $(date +'%Y-%m-%d %H:%M:%S')"
+            git push --force --quiet "https://${{ secrets.CI_TOKEN }}@github.com/suishika/suishika.github.io" master:master
